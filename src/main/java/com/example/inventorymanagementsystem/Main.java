@@ -8,6 +8,8 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import java.io.IOException;
 
+// javadoc folder which is named 'javaDoc' is located above the src folder which contains the main java code.
+
 public class Main extends Application {
 
 
