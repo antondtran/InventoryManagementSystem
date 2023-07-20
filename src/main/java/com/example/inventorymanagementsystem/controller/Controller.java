@@ -168,7 +168,8 @@ public class Controller {
     }
 
     /**
-     *
+     * FUTURE ENHANCEMENT
+     * Separate UI code from business logic. To improve readability of the code the UI component should be created in another class that is dedicated to handling the user interface. This improvement will make my code more modular and easier to maintain.
      * @param event when user clicks on the add button a form will be display to allow the user to enter in parts information.
      */
 
@@ -228,11 +229,6 @@ public class Controller {
         Button cancelBtn = new Button("Cancel");
 
 
-        /**
-         * FUTURE ENHANCEMENT
-         * Separate UI code from business logic. To improve readability of the code the UI component should be created in another class that is dedicated to handling the user interface. This improvement will make my code more modular and easier to maintain.
-         */
-
         // gridpane that holds label and textfields together
 
         GridPane partsGridPane = new GridPane();
@@ -270,12 +266,6 @@ public class Controller {
 
         saveBtn.setOnAction(actionEvent -> {
 
-
-            /**
-             * FUTURE ENHANCEMENT
-             * IMPROVE ERROR HANDLING
-             * Instead of duplicating error handling code in different parts of my application, I should create a centralized error handling component that will handle this task.
-             */
             try {
                 Integer partInvInput = Integer.parseInt(partInventoryTextField.getText());
 
@@ -367,7 +357,9 @@ public class Controller {
     }
 
     /**
-     *
+     * FUTURE ENHANCEMENT
+     * IMPROVE ERROR HANDLING
+     * Instead of duplicating error handling code in different parts of my application, I should create a centralized error handling component that will handle this task.
      * @param event When a user clicks on the part modify button a form will be populated with the data that the user selected for modification.
      */
 
@@ -1080,7 +1072,7 @@ public class Controller {
      * @return returns true if the value is an integer
      */
 
-    private boolean isInteger(String str) {
+    public boolean isInteger(String str) {
         try {
             Integer.parseInt(str);
             return true;
@@ -1095,7 +1087,7 @@ public class Controller {
      * @return returns true if the value is numeric
      */
 
-    private boolean isNumeric(String str) {
+    public boolean isNumeric(String str) {
         try {
             Double.parseDouble(str);
             return true;
