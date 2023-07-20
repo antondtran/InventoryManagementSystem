@@ -48,6 +48,21 @@ public class Inventory {
 
     /**
      *
+     * @param partName input parameter to find a part by name
+     * @return returns the part name that matches with the part that was passed into the parameter
+     */
+
+    public Part lookupPart(String partName) {
+        for (Part part : allParts) {
+            if (part.getName().equals(partName)) {
+                return part;
+            }
+        }
+        return null; // Part with the given name not found
+    }
+
+    /**
+     *
      * @param productID takes in a parameter input for partID.
      * @return retrieves the product ID
      */
@@ -59,6 +74,21 @@ public class Inventory {
             }
         }
         return null; // Part with the given ID not found
+    }
+
+    /**
+     *
+     * @param productName input parameter to find a part by name
+     * @return returns the part name that matches with the part that was passed into the parameter
+     */
+
+    public Product lookupProduct(String productName) {
+        for (Product product : allProducts) {
+            if (product.getName().equals(productName)) {
+                return product;
+            }
+        }
+        return null; // Part with the given name not found
     }
 
 

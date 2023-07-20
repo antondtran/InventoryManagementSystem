@@ -96,12 +96,14 @@ public class Controller {
 
     private FilteredList<Product> filteredProducts = new FilteredList<>(inventory.getAllProducts());
 
-    private ObservableList<Part> partList = FXCollections.observableArrayList();
 
+    private Product product;
 
 
 
     public void initialize() {
+
+        product = new Product();
 
 
         // used to set each data to its respective cell.
@@ -132,12 +134,20 @@ public class Controller {
                 }
 
                 String searchText = newValue.toLowerCase();
-                return part.getName().toLowerCase().contains(searchText) || String.valueOf(part.getId()).contains(searchText);
+                Part searchedPartName = inventory.lookupPart(part.getName());
+                Part searchedPartID = inventory.lookupPart(part.getId());
+
+
+                // Only returns true if the searched part is not null and its name contains the search text
+                return (searchedPartName != null && searchedPartName.getName().toLowerCase().contains(searchText) ||
+                        (String.valueOf(searchedPartID.getId()).contains(searchText)));
             });
             partTableView.setItems(filteredParts);
         });
 
-        searchProduct.setPromptText("Search by Product ID or Name");
+
+
+        searchProduct.setPromptText("Search by Part ID or Name");
         searchProduct.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredProducts.setPredicate(product -> {
                 if (newValue == null || newValue.isEmpty()) {
@@ -145,7 +155,13 @@ public class Controller {
                 }
 
                 String searchText = newValue.toLowerCase();
-                return product.getName().toLowerCase().contains(searchText) || String.valueOf(product.getId()).contains(searchText);
+                Product searchedProductName = inventory.lookupProduct(product.getName());
+                Product searchedProductID = inventory.lookupProduct(product.getId());
+
+
+                // Only returns true if the searched product is not null and its name contains the search text
+                return (searchedProductName != null && searchedProductName.getName().toLowerCase().contains(searchText) ||
+                        (String.valueOf(searchedProductID.getId()).contains(searchText)));
             });
             productTableView.setItems(filteredProducts);
         });
@@ -212,6 +228,10 @@ public class Controller {
         Button cancelBtn = new Button("Cancel");
 
 
+        /**
+         * FUTURE ENHANCEMENT
+         * Separate UI code from business logic. To improve readability of the code the UI component should be created in another class that is dedicated to handling the user interface. This improvement will make my code more modular and easier to maintain.
+         */
 
         // gridpane that holds label and textfields together
 
@@ -251,10 +271,15 @@ public class Controller {
         saveBtn.setOnAction(actionEvent -> {
 
 
+            /**
+             * FUTURE ENHANCEMENT
+             * IMPROVE ERROR HANDLING
+             * Instead of duplicating error handling code in different parts of my application, I should create a centralized error handling component that will handle this task.
+             */
             try {
                 Integer partInvInput = Integer.parseInt(partInventoryTextField.getText());
 
-                Integer partIDInput = generatePartID();
+                Integer partIDInput;
                 String partNameInput = partNameTextField.getText();
                 Double partPriceInput = Double.valueOf(partPriceTextField.getText());
                 Integer partMinInput = Integer.valueOf(partMinTextField.getText());
@@ -264,6 +289,7 @@ public class Controller {
                 if (partInHouseBtn.isSelected()) {
 
                     if (partInvInput <= partMaxInput && partInvInput >= partMinInput){
+                        partIDInput = generatePartID();
                         InHouse inHouse = new InHouse(partIDInput, partNameInput, partPriceInput, partInvInput, partMinInput, partMaxInput, 5 );
                         inHouse.setMachineID(Integer.parseInt(partSourceTextField.getText()));
                         inventory.addPart(inHouse);
@@ -275,8 +301,8 @@ public class Controller {
                     } else {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Invalid Input");
-                        alert.setHeaderText("Invalid Input");
-                        alert.setContentText("Please enter a value that is within the min-max");
+                        alert.setHeaderText("Invalid value inputted. Value is out of range");
+                        alert.setContentText("Please enter a value that is within the min-max value");
                         alert.showAndWait();
 
                     }
@@ -285,6 +311,7 @@ public class Controller {
 
 
                     if (partInvInput <= partMaxInput && partInvInput >= partMinInput){
+                        partIDInput = generatePartID();
                         Outsourced outsourced = new Outsourced(partIDInput, partNameInput, partPriceInput, partInvInput, partMinInput, partMaxInput, "HI");
                         outsourced.setCompanyName(partSourceTextField.getText());
                         inventory.addPart(outsourced);
@@ -296,8 +323,8 @@ public class Controller {
                     } else {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Invalid Input");
-                        alert.setHeaderText("Invalid Input");
-                        alert.setContentText("Please enter a value that is within the min-max");
+                        alert.setHeaderText("Invalid value inputted. Value is out of range");
+                        alert.setContentText("Please enter a value that is within the min-max value");
                         alert.showAndWait();
 
                     }
@@ -309,10 +336,23 @@ public class Controller {
 
             } catch (NumberFormatException exception) {
                 // Handle the case when the input is not a valid integer
+
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Invalid Input");
-                alert.setHeaderText("Invalid Input");
-                alert.setContentText("Please enter a valid integer");
+                alert.setHeaderText("Invalid input type");
+
+                if (!isInteger(partInventoryTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Inventory");
+                } else if (!isNumeric(partPriceTextField.getText())) {
+                    alert.setContentText("Please enter a valid numeric value for Price");
+                } else if (!isInteger(partMinTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Min");
+                } else if (!isInteger(partMaxTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Max");
+                } else {
+                    alert.setContentText("Please enter valid values");
+                }
+
                 alert.showAndWait();
             }
 
@@ -464,6 +504,7 @@ public class Controller {
                 Integer partMinInput = Integer.valueOf(partMinTextField.getText());
                 Integer partMaxInput = Integer.valueOf(partMaxTextField.getText());
 
+
                 selectedPart.setId(partIDInput);
                 selectedPart.setName(partNameInput);
                 selectedPart.setStock(partInvInput);
@@ -472,8 +513,6 @@ public class Controller {
                 selectedPart.setMax(partMaxInput);
 
                 // Add the part to the list only if the input is valid
-
-
                 if (partInHouseBtn.isSelected()) {
 
                     if (partInvInput <= partMaxInput && partInvInput >= partMinInput){
@@ -488,8 +527,8 @@ public class Controller {
                     } else {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Invalid Input");
-                        alert.setHeaderText("Invalid Input");
-                        alert.setContentText("Please enter a value that is within the min-max");
+                        alert.setHeaderText("Invalid value inputted. Value is out of range");
+                        alert.setContentText("Please enter a value that is within the min-max value");
                         alert.showAndWait();
 
                     }
@@ -509,8 +548,8 @@ public class Controller {
                     } else {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Invalid Input");
-                        alert.setHeaderText("Invalid Input");
-                        alert.setContentText("Please enter a value that is within the min-max");
+                        alert.setHeaderText("Invalid value inputted. Value is out of range");
+                        alert.setContentText("Please enter a value that is within the min-max value");
                         alert.showAndWait();
 
                     }
@@ -520,14 +559,25 @@ public class Controller {
 
 
 
-
-
             } catch (NumberFormatException exception) {
                 // Handle the case when the input is not a valid integer
+
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Invalid Input");
-                alert.setHeaderText("Invalid Input");
-                alert.setContentText("Please enter a valid integer");
+                alert.setHeaderText("Invalid input type");
+
+                if (!isInteger(partInventoryTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Inventory");
+                } else if (!isNumeric(partPriceTextField.getText())) {
+                    alert.setContentText("Please enter a valid numeric value for Price");
+                } else if (!isInteger(partMinTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Min");
+                } else if (!isInteger(partMaxTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Max");
+                } else {
+                    alert.setContentText("Please enter valid values");
+                }
+
                 alert.showAndWait();
             }
 
@@ -536,7 +586,9 @@ public class Controller {
 
 
 
+
         });
+
 
         modifyStage.show();
     }
@@ -593,6 +645,7 @@ public class Controller {
 
         filteredParts = new FilteredList<>(inventory.getAllParts(), p -> true);
 
+
         searchPartTextField.setPromptText("Search by Part ID or Name");
         searchPartTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredParts.setPredicate(part -> {
@@ -601,13 +654,26 @@ public class Controller {
                 }
 
                 String searchText = newValue.toLowerCase();
-                return part.getName().toLowerCase().contains(searchText) || String.valueOf(part.getId()).contains(searchText);
+                Part searchedPartName = inventory.lookupPart(part.getName());
+                Part searchedPartID = inventory.lookupPart(part.getId());
+
+
+                // Only returns true if the searched part is not null and its name contains the search text
+                return (searchedPartName != null && searchedPartName.getName().toLowerCase().contains(searchText) ||
+                        (String.valueOf(searchedPartID.getId()).contains(searchText)));
             });
             productPartTableView.setItems(filteredParts);
         });
 
+
+
+
+
+
+
+
         TableView<Part> userPartTableView = (TableView<Part>) root.lookup("#userPartTableView");
-        userPartTableView.setItems(partList);
+        userPartTableView.setItems(product.getAssociatedParts());
 
 
         TableView<Part> productPartTableView = (TableView<Part>) root.lookup("#productPartTableView");
@@ -652,7 +718,7 @@ public class Controller {
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
                     if (selectedPart != null) {
-                        partList.remove(selectedPart);
+                        product.deleteAssociatedParts(selectedPart);
                     }
                 } else {
                     // User clicked Cancel, do nothing or handle the cancellation
@@ -667,7 +733,8 @@ public class Controller {
 
             if (selectedPart != null) {
                 // Add the selected part to the userPartTableView and selectedProduct's associatedParts
-                userPartTableView.getItems().add(selectedPart);
+
+                 product.getAssociatedParts().add(selectedPart);
 
             } else {
                 // Handle the case when selectedProduct is null
@@ -688,7 +755,7 @@ public class Controller {
 
         productSaveBtn.setOnAction(event1 -> {
             try {
-                Integer partIDInput = generatePartID();
+                Integer partIDInput;
                 Integer productInvInput = Integer.parseInt(productInventoryTextField.getText());
                 String productNameInput = productNameTextField.getText();
                 Double productPriceInput = Double.valueOf(productPriceTextField.getText());
@@ -698,7 +765,14 @@ public class Controller {
                 // Add the part to the list only if the input is valid
 
                 if (productInvInput <= productMaxInput && productInvInput >= productMinInput){
-                    Product product = new Product(partIDInput, productNameInput, productPriceInput, productInvInput, productMinInput, productMaxInput);
+                    partIDInput = generatePartID();
+                    product.setId(partIDInput);
+                    product.setName(productNameInput);
+                    product.setStock(productInvInput);
+                    product.setPrice(productPriceInput);
+                    product.setMin(productMinInput);
+                    product.setMax(productMaxInput);
+
 
                     product.setAssociatedParts(userPartTableView.getItems());
                     inventory.addProduct(product);
@@ -720,8 +794,20 @@ public class Controller {
                 // Handle the case when the input is not a valid integer
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Invalid Input");
-                alert.setHeaderText("Invalid Input");
-                alert.setContentText("Please enter a valid integer");
+                alert.setHeaderText("Invalid input type");
+
+                if (!isInteger(productInventoryTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Inventory");
+                } else if (!isNumeric(productPriceTextField.getText())) {
+                    alert.setContentText("Please enter a valid numeric value for Price");
+                } else if (!isInteger(productMinTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Min");
+                } else if (!isInteger(productMaxTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Max");
+                } else {
+                    alert.setContentText("Please enter valid values");
+                }
+
                 alert.showAndWait();
             }
         });
@@ -771,7 +857,13 @@ public class Controller {
                 }
 
                 String searchText = newValue.toLowerCase();
-                return part.getName().toLowerCase().contains(searchText) || String.valueOf(part.getId()).contains(searchText);
+                Part searchedPartName = inventory.lookupPart(part.getName());
+                Part searchedPartID = inventory.lookupPart(part.getId());
+
+
+                // Only returns true if the searched part is not null and its name contains the search text
+                return (searchedPartName != null && searchedPartName.getName().toLowerCase().contains(searchText) ||
+                        (String.valueOf(searchedPartID.getId()).contains(searchText)));
             });
             productPartTableView.setItems(filteredParts);
         });
@@ -855,7 +947,7 @@ public class Controller {
             alert.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
                     if (selectedPart != null) {
-                        partList.remove(selectedPart);
+                        selectedProduct.deleteAssociatedParts(selectedPart);
                     }
                 } else {
                     // User clicked Cancel, do nothing or handle the cancellation
@@ -883,15 +975,15 @@ public class Controller {
                 if (productInvInput <= productMaxInput && productInvInput >= productMinInput){
                     // Update the selected product with the modified data
 
-                    selectedProduct.setId(productIDInput);
-                    selectedProduct.setName(productNameInput);
-                    selectedProduct.setStock(productInvInput);
-                    selectedProduct.setPrice(productPriceInput);
-                    selectedProduct.setMin(productMinInput);
-                    selectedProduct.setMax(productMaxInput);
+                    product.setId(productIDInput);
+                    product.setName(productNameInput);
+                    product.setStock(productInvInput);
+                    product.setPrice(productPriceInput);
+                    product.setMin(productMinInput);
+                    product.setMax(productMaxInput);
 
 
-                    inventory.updateProduct(inventory.lookupProduct(productIDInput).getId(), selectedProduct);
+                    inventory.updateProduct(inventory.lookupProduct(productIDInput).getId(), product);
 
                     productTableView.setItems(inventory.getAllProducts());
                     productTableView.refresh();
@@ -916,8 +1008,20 @@ public class Controller {
                 // Handle the case when the input is not a valid integer
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Invalid Input");
-                alert.setHeaderText("Invalid Input");
-                alert.setContentText("Please enter a valid integer");
+                alert.setHeaderText("Invalid input type");
+
+                if (!isInteger(productInventoryTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Inventory");
+                } else if (!isNumeric(productPriceTextField.getText())) {
+                    alert.setContentText("Please enter a valid numeric value for Price");
+                } else if (!isInteger(productMinTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Min");
+                } else if (!isInteger(productMaxTextField.getText())) {
+                    alert.setContentText("Please enter a valid integer value for Max");
+                } else {
+                    alert.setContentText("Please enter valid values");
+                }
+
                 alert.showAndWait();
             }
         });
@@ -943,11 +1047,18 @@ public class Controller {
         // Show and wait for the user to click a button
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                if (selectedProduct != null) {
-                    inventory.deleteProduct(selectedProduct);
+                if (selectedProduct != null && product.getAssociatedParts().isEmpty() ) {
+                    inventory.deleteProduct(product);
+                } else {
+                    Alert associatedPartAlert = new Alert(Alert.AlertType.WARNING);
+                    associatedPartAlert.setTitle("Delete Product");
+                    associatedPartAlert.setHeaderText("Product has Associated Parts");
+                    associatedPartAlert.setContentText("Cannot delete a product with associated parts. Please remove the associated parts first.");
+
+                    associatedPartAlert.showAndWait();
                 }
             } else {
-                // User clicked Cancel, do nothing or handle the cancellation
+                // User clicked Cancel
                 System.out.println("Cancelled");
             }
         });
@@ -963,7 +1074,35 @@ public class Controller {
         return ++assignedPartID;
     }
 
+    /**
+     *
+     * @param str method checks to see if the input is an integer value
+     * @return returns true if the value is an integer
+     */
 
+    private boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /**
+     *
+     * @param str method checks to see if the input is a numeric value
+     * @return returns true if the value is numeric
+     */
+
+    private boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 
 
 
