@@ -163,4 +163,6 @@ public class Product {
     public void setMax(int max) {
         this.max = max;
     }
+
+
 }

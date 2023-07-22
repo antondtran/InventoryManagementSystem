@@ -861,7 +861,9 @@ public class Controller {
         });
 
         TableView<Part> userPartTableView = (TableView<Part>) root.lookup("#userPartTableView");
+
         userPartTableView.setItems(selectedProduct.getAssociatedParts());
+
 
         TableColumn<Part, Integer> userPartIDColumn = (TableColumn<Part, Integer>) userPartTableView.getColumns().get(0);
         TableColumn<Part, String> userPartNameColumn = (TableColumn<Part, String>) userPartTableView.getColumns().get(1);
@@ -928,6 +930,7 @@ public class Controller {
 
         Button removePartBtn = (Button) loader.getNamespace().get("removePartBtn");
 
+
         removePartBtn.setOnAction(event1 -> {
             Part selectedPart = userPartTableView.getSelectionModel().getSelectedItem();
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -940,6 +943,7 @@ public class Controller {
                 if (response == ButtonType.OK) {
                     if (selectedPart != null) {
                         selectedProduct.deleteAssociatedParts(selectedPart);
+
                     }
                 } else {
                     // User clicked Cancel, do nothing or handle the cancellation
@@ -967,18 +971,24 @@ public class Controller {
                 if (productInvInput <= productMaxInput && productInvInput >= productMinInput){
                     // Update the selected product with the modified data
 
-                    product.setId(productIDInput);
-                    product.setName(productNameInput);
-                    product.setStock(productInvInput);
-                    product.setPrice(productPriceInput);
-                    product.setMin(productMinInput);
-                    product.setMax(productMaxInput);
+                    selectedProduct.setId(productIDInput);
+                    selectedProduct.setName(productNameInput);
+                    selectedProduct.setStock(productInvInput);
+                    selectedProduct.setPrice(productPriceInput);
+                    selectedProduct.setMin(productMinInput);
+                    selectedProduct.setMax(productMaxInput);
 
 
-                    inventory.updateProduct(inventory.lookupProduct(productIDInput).getId(), product);
+
+                    // Refresh the TableView
+
+
+
+                    inventory.updateProduct(inventory.lookupProduct(productIDInput).getId(), selectedProduct);
 
                     productTableView.setItems(inventory.getAllProducts());
                     productTableView.refresh();
+
                     stage.close();
 
                 } else {
@@ -1039,8 +1049,8 @@ public class Controller {
         // Show and wait for the user to click a button
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                if (selectedProduct != null && product.getAssociatedParts().isEmpty() ) {
-                    inventory.deleteProduct(product);
+                if (selectedProduct != null && selectedProduct.getAssociatedParts().isEmpty()) {
+                    inventory.deleteProduct(selectedProduct);
                 } else {
                     Alert associatedPartAlert = new Alert(Alert.AlertType.WARNING);
                     associatedPartAlert.setTitle("Delete Product");
